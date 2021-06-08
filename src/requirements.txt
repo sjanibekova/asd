@@ -10,6 +10,8 @@ MouseInfo==0.1.3
 pefile==2021.5.24
 Pillow==8.2.0
 PyGetWindow==0.0.9
+pyinstaller==4.3
+pyinstaller-hooks-contrib==2021.1
 PyMsgBox==1.0.9
 pyperclip==1.8.2
 PyRect==0.1.4
@@ -21,11 +23,3 @@ pywinauto==0.6.8
 six==1.16.0
 typing-extensions==3.10.0.0
 zipp==3.4.1
-altgraph==0.17
-colored==1.4.2
-future==0.18.2
-Gooey==1.0.3.1
-psutil==5.7.0
-pyinstaller @ https://github.com/pyinstaller/pyinstaller/archive/develop.zip
-pywin32-ctypes==0.2.0
-wxPython==4.0.7
