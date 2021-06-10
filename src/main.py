@@ -1,4 +1,4 @@
-
+import json
 import time
 from io import BytesIO
 import win32api
@@ -93,9 +93,10 @@ def get_full_specification_of_element(element):
     :returns: full_element_info in dict format
     """
     full_element_info = {"control_id": element.control_id, "enabled": element.enabled, "handle": element.handle,
-                         "title": element.name, "process_id": element.process_id, 'rectangle': element.rectangle,
+                         "title": element.name, "process_id": element.process_id, 'rectangle': {"rect_left": element.rectangle.left, "rect_right": element.rectangle.right, "rect_top": element.rectangle.top, "rect_bottom": element.rectangle.bottom},
                          "rich_text": element.rich_text, "control_type": element.control_type,
-                         "runtime_id": element.runtime_id, "class_name": element.class_name}
+                         # Не уверена что правильно
+                         "runtime_id": element.runtime_id, "class_name": element.class_name, "children": [{"ctrl_index":(index, element.name)} for index, element in enumerate(element.children())]}
     return full_element_info
 
 
@@ -106,7 +107,8 @@ def reindex_elements_in_tree(result):
     :param result: dict format of element specification
     :return: result_list reindexed
     """
-    result_list = [values for _, values in result.items()]
+    result_list = [values for index, values  in result.items()]
+    # pp(result_list)
     # Убираем родителя для всех окон(рабочий стол) и оставляем спец окна
     reversed_result = list(reversed(result_list))[1:]
     result_list = [{'level ' + str(index): item}
@@ -114,7 +116,7 @@ def reindex_elements_in_tree(result):
     return result_list
 
 
-def get_element_tree_structure(element):
+def get_element_tree_structure(element, wrapper):
     """ Get get element and return all its parents and convert info
         about element according to specification
     :param element:
@@ -127,14 +129,20 @@ def get_element_tree_structure(element):
         # уровень от 0 - (уровень елемента) и -1 для родителя child_level: 0 parent level: -1 ... parent of parent: -2
         level = parent_level_index - 1
         # Добавляем информацию о родителях по одному
+
         dict_of_tree[level] = get_full_specification_of_element(element_parent)
-        # обратись  к родителю
+            # обратись  к родителю
         element_parent = element_parent.parent
         parent_level_index = parent_level_index - 1
 
         # getFullInfoAboutElement(element)'
     return dict_of_tree
 
+
+#has_depth(root, depth)
+# Return True if element has particular depth level relative to the root
+#
+# def get_all_windows()
 
 def main(keymap=None):
     """
@@ -159,13 +167,18 @@ def main(keymap=None):
             element, wrapper = get_current_element_by_coordinates()
             # проверка зажата ли правая кнопка мыши или ctrl
             if mouse.is_pressed(button=button) and keyboard.is_pressed(hothey):
-                result = get_element_tree_structure(element)
+                result = get_element_tree_structure(element, wrapper)
+
                 final_result = reindex_elements_in_tree(result)
+
                 element_screenshot = get_image_of_element(wrapper)
                 final_result.append({"backend": "uia"})
-                final_result.append({"image_base_64_code": element_screenshot})
+                final_result.append({"image_base_64_code": element_screenshot.decode('utf-8')})
                 lFlagLoop = False
                 pp(final_result)
+                with open('element_tree.json', 'w', ) as outfile:
+                    json.dump(final_result, outfile, indent=2)
+
             else:
                 UIO_Highlight(wrapper)
         except COMError as e:
@@ -174,7 +187,9 @@ def main(keymap=None):
 
     return final_result
 
-
+'''
+draw_outline(colour='green', thickness=2, fill=<MagicMock name='mock.win32defines.BS_NULL' id='140124673757368'>, rect=None)
+'''
 if __name__ == '__main__':
     main()
     time.sleep(20)
